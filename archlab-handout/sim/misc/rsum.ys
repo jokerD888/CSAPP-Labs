@@ -1,0 +1,41 @@
+# Execution begins at address 0
+        .pos 0
+        irmovq stack,%rsp        # Set up stack pointer
+        call main                   # Execute main program
+        halt                        # Terminate program
+
+# Sample linked list
+.align 8
+ele1:
+        .quad 0x00a
+        .quad ele2
+ele2:
+        .quad 0x0b0
+        .quad ele3
+ele3:
+        .quad 0xc00
+        .quad 0
+
+main:
+        irmovq ele1,%rdi
+        xorq %rax,%rax                  # rax = 0
+        irmovq $8,%rdx                  # 在main中设置偏移量，避免递归调用中重复设置
+        call rsum_list
+        ret
+
+rsum_list:
+        pushq %rbx                      # 被调用者保存，此时，此函数为被调用函数
+        andq %rdi,%rdi                  # Set CC
+        je end                          # 为零，跳转
+        mrmovq  (%rdi),%rbx             # 解地址，ls->val，将val保存到被调用者保存寄存器rbx中
+        addq %rdx,%rdi                   # ls->next
+        mrmovq (%rdi),%rdi              # ls=ls->next
+        call rsum_list                  
+        addq %rbx,%rax
+end:
+        popq %rbx                      # 恢复
+        ret
+
+# Stack starts here and grows to lower addresses
+        .pos 0x200
+stack: 

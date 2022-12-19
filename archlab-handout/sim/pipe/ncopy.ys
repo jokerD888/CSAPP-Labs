@@ -1,0 +1,676 @@
+#/* $begin ncopy-ys */
+##################################################################
+# ncopy.ys - Copy a src block of len words to dst.
+# Return the number of positive words (>0) contained in src.
+#
+# Include your name and ID here.
+#
+# Describe how and why you modified the baseline code.
+#
+##################################################################
+# Do not modify this portion
+# Function prologue.
+# %rdi = src, %rsi = dst, %rdx = len
+ncopy:
+
+##################################################################
+# # You can modify this portion
+# 	# Loop header
+# 	xorq %rax,%rax		# count = 0;
+# 	andq %rdx,%rdx		# len <= 0?
+# 	jle Done		# if so, goto Done:
+
+# Loop:	mrmovq (%rdi), %r10	# read val from src...
+# 	rmmovq %r10, (%rsi)	# ...and store it to dst
+# 	andq %r10, %r10		# val <= 0?
+# 	jle Npos		# if so, goto Npos:
+# 	irmovq $1, %r10
+# 	addq %r10, %rax		# count++
+# Npos:	irmovq $1, %r10
+# 	subq %r10, %rdx		# len--
+# 	irmovq $8, %r10
+# 	addq %r10, %rdi		# src++
+# 	addq %r10, %rsi		# dst++
+# 	andq %rdx,%rdx		# len > 0?
+# 	jg Loop			# if so, goto Loop:
+
+# # Version 1.0 ！！ iaddq
+# # You can modify this portion
+# 	# Loop header
+# 	xorq %rax,%rax		# count = 0;
+# 	andq %rdx,%rdx		# len <= 0?
+# 	jle Done		# if so, goto Done:
+
+# Loop:	mrmovq (%rdi), %r10	# read val from src...
+# 	rmmovq %r10, (%rsi)	# ...and store it to dst
+# 	andq %r10, %r10		# val <= 0?
+# 	jle Npos		# if so, goto Npos:
+# 	iaddq $1, %rax		# count++
+# Npos:	
+# 	iaddq $8, %rdi		# src++
+# 	iaddq $8, %rsi		# dst++
+# 	iaddq $-1,%rdx		# len--,同时设置状态码
+# 	jg Loop			# if so, goto Loop:
+
+
+# # Version 2.0 ！！ iaddq + 8*1展开 
+# # You can modify this portion
+# 	# Loop header
+# 	xorq %rax,%rax		# count = 0;
+# 	rrmovq %rdx,%rcx	# limit=len
+# 	iaddq $-7,%rcx		# limit-=7
+# 	jle Rest		# if so, goto Rest:
+
+# Loop:
+# # read val from src
+# 	mrmovq (%rdi),%r8
+# 	mrmovq 8(%rdi), %r9
+# 	mrmovq 16(%rdi), %r10
+# 	mrmovq 24(%rdi), %r11
+# 	mrmovq 32(%rdi), %r12
+# 	mrmovq 40(%rdi), %r13
+# 	mrmovq 48(%rdi), %r14
+# 	mrmovq 56(%rdi), %rbx
+# # store val to dst
+# 	rmmovq %r8, (%rsi)
+# 	rmmovq %r9, 8(%rsi)
+# 	rmmovq %r10, 16(%rsi)
+# 	rmmovq %r11, 24(%rsi)
+# 	rmmovq %r12, 32(%rsi)
+# 	rmmovq %r13, 40(%rsi)
+# 	rmmovq %r14, 48(%rsi)
+# 	rmmovq %rbx, 56(%rsi)
+
+# ele1:
+# 	andq %r8,%r8		# val<=0?
+# 	jle ele2			# if so,goto ele2
+# 	iaddq $1,%rax		# count++ 
+# ele2:   
+# 	andq %r9, %r9          
+# 	jle ele3
+# 	iaddq $1, %rax
+# ele3:   
+# 	andq %r10, %r10
+# 	jle ele4
+# 	iaddq $1, %rax
+# ele4:   
+# 	andq %r11, %r11
+# 	jle ele5
+# 	iaddq $1, %rax
+# ele5:   
+# 	andq %r12, %r12
+# 	jle ele6
+# 	iaddq $1, %rax
+# ele6:   
+# 	andq %r13, %r13
+# 	jle ele7
+# 	iaddq $1, %rax
+# ele7:   
+# 	andq %r14, %r14
+# 	jle ele8
+# 	iaddq $1, %rax
+# ele8:   
+# 	andq %rbx, %rbx
+# 	jle End1
+# 	iaddq $1, %rax
+# End1:
+# 	iaddq $64,%rdi	# src+=8
+# 	iaddq $64,%rsi	# dst+=8
+# 	iaddq $-8,%rdx # len-=8
+# 	iaddq $-8,%rcx	# limit-=8
+# 	jg Loop
+
+# Rest:	# 不够8个展开，剩余的进行循环
+# 	andq %rdx,%rdx		# len<=0
+# 	jle Done
+# LoopRest:
+# 	mrmovq (%rdi),%rbx	
+# 	rmmovq %rbx,(%rsi)
+# 	andq %rbx,%rbx
+# 	jle End2
+# 	iaddq $1,%rax
+# End2:
+# 	iaddq $8,%rdi
+# 	iaddq $8,%rsi
+# 	iaddq $-1,%rdx
+# 	jg LoopRest:
+
+
+# # Version 2.1 ！！ iaddq + 9*1展开                  # Score	50.8/60.0
+# # You can modify this portion
+# 	# Loop header
+# 	#xorq %rax,%rax		# count = 0;
+# 	iaddq $-8,%rdx		# limit-=8
+# 	jle Pos1		# if so, goto ele1:
+
+# Loop:
+# # read val from src 
+# 	mrmovq (%rdi),%r8
+# 	mrmovq 8(%rdi), %r9
+# 	mrmovq 16(%rdi), %r10
+# 	mrmovq 24(%rdi), %r11
+# 	mrmovq 32(%rdi), %r12
+# 	mrmovq 40(%rdi), %r13
+# 	mrmovq 48(%rdi), %r14
+# 	mrmovq 56(%rdi), %rbx
+# 	mrmovq 64(%rdi), %rbp
+
+# # store val to dst
+# 	rmmovq %r8, (%rsi)
+# 	rmmovq %r9, 8(%rsi)
+# 	rmmovq %r10, 16(%rsi)
+# 	rmmovq %r11, 24(%rsi)
+# 	rmmovq %r12, 32(%rsi)
+# 	rmmovq %r13, 40(%rsi)
+# 	rmmovq %r14, 48(%rsi)
+# 	rmmovq %rbx, 56(%rsi)
+# 	rmmovq %rbp, 64(%rsi)
+# ele1:
+# 	andq %r8,%r8		# val<=0?
+# 	jle ele2			# if so,goto ele2
+# 	iaddq $1,%rax		# count++ 
+# ele2:   
+# 	andq %r9, %r9          
+# 	jle ele3
+# 	iaddq $1, %rax
+# ele3:   
+# 	andq %r10, %r10
+# 	jle ele4
+# 	iaddq $1, %rax
+# ele4:   
+# 	andq %r11, %r11
+# 	jle ele5
+# 	iaddq $1, %rax
+# ele5:   
+# 	andq %r12, %r12
+# 	jle ele6
+# 	iaddq $1, %rax
+# ele6:   
+# 	andq %r13, %r13
+# 	jle ele7
+# 	iaddq $1, %rax
+# ele7:   
+# 	andq %r14, %r14
+# 	jle ele8
+# 	iaddq $1, %rax
+# ele8:   
+# 	andq %rbx, %rbx
+# 	jle ele9
+# 	iaddq $1, %rax
+# ele9:
+# 	andq %rbp,%rbp
+# 	jle End1
+# 	iaddq $1,%rax
+# End1:
+# 	iaddq $72,%rdi	# src+=9
+# 	iaddq $72,%rsi	# dst+=9
+# 	iaddq $-9,%rdx # len-=9
+# 	jg Loop
+
+# # 不够9个展开，剩余的进行循环,剩下的最多只有8个
+# Pos1:
+# 	iaddq $8,%rdx
+
+# 	iaddq $-1,%rdx
+# 	jl Done
+# 	mrmovq (%rdi),%r8
+# 	rmmovq %r8,(%rsi)
+# 	andq %r8,%r8
+# 	jle Pos2
+# 	iaddq 1,%rax
+# Pos2:
+# 	iaddq $-1,%rdx
+# 	jl Done
+# 	mrmovq 8(%rdi),%r8
+# 	rmmovq %r8,8(%rsi)
+# 	andq %r8,%r8
+# 	jle Pos3
+# 	iaddq 1,%rax
+# Pos3:
+# 	iaddq $-1,%rdx
+# 	jl Done
+# 	mrmovq 16(%rdi),%r8
+# 	rmmovq %r8,16(%rsi)
+# 	andq %r8,%r8
+# 	jle Pos4
+# 	iaddq 1,%rax
+# Pos4:
+# 	iaddq $-1,%rdx
+# 	jl Done
+# 	mrmovq 24(%rdi),%r8
+# 	rmmovq %r8,24(%rsi)
+# 	andq %r8,%r8
+# 	jle Pos5
+# 	iaddq 1,%rax
+# Pos5:
+# 	iaddq $-1,%rdx
+# 	jl Done
+# 	mrmovq 32(%rdi),%r8
+# 	rmmovq %r8,32(%rsi)
+# 	andq %r8,%r8
+# 	jle Pos6
+# 	iaddq 1,%rax
+# Pos6:
+# 	iaddq $-1,%rdx
+# 	jl Done
+# 	mrmovq 40(%rdi),%r8
+# 	rmmovq %r8,40(%rsi)
+# 	andq %r8,%r8
+# 	jle Pos7
+# 	iaddq 1,%rax
+# Pos7:
+# 	iaddq $-1,%rdx
+# 	jl Done
+# 	mrmovq 48(%rdi),%r8
+# 	rmmovq %r8,48(%rsi)
+# 	andq %r8,%r8
+# 	jle Pos8
+# 	iaddq 1,%rax
+# Pos8:
+# 	iaddq $-1,%rdx
+# 	jl Done
+# 	mrmovq 56(%rdi),%r8
+# 	rmmovq %r8,56(%rsi)
+# 	andq %r8,%r8
+# 	jle Done
+# 	iaddq 1,%rax
+
+
+# Version 3 ！！ iaddq + 4*1展开 + 算法流程优化		Score	60.0/60.0 
+# You can modify this portion
+	# Loop header
+	#xorq %rax,%rax		# count = 0;
+	iaddq $-3,%rdx		# limit-=3
+	jle Pos1		# if so, goto ele1:
+
+Loop:
+# read val from src
+	mrmovq (%rdi),%r8
+	mrmovq 8(%rdi), %r9
+	mrmovq 16(%rdi), %r10
+	mrmovq 24(%rdi), %r11
+
+
+# store val to dst
+	rmmovq %r8, (%rsi)
+	rmmovq %r9, 8(%rsi)
+	rmmovq %r10, 16(%rsi)
+	rmmovq %r11, 24(%rsi)
+	
+ele1:
+	andq %r8,%r8		# val<=0?
+	jle ele2			# if so,goto ele2
+	iaddq $1,%rax		# count++ 
+ele2:   
+	andq %r9, %r9          
+	jle ele3
+	iaddq $1, %rax
+ele3:   
+	andq %r10, %r10
+	jle ele4
+	iaddq $1, %rax
+ele4:   
+	andq %r11, %r11
+	jle End1
+	iaddq $1, %rax
+End1:
+	iaddq $32,%rdi	# src+=9
+	iaddq $32,%rsi	# dst+=9
+	iaddq $-4,%rdx # len-=9
+	jg Loop
+
+# 不够4个展开，剩余的进行循环,剩下的最多只有3个
+Pos1:
+	iaddq $3,%rdx
+
+	jle Done
+	mrmovq (%rdi),%r8
+	rmmovq %r8,(%rsi)
+	andq %r8,%r8
+	jle Pos2
+	iaddq 1,%rax
+Pos2:
+	iaddq $-1,%rdx
+	jle Done
+	mrmovq 8(%rdi),%r8
+	rmmovq %r8,8(%rsi)
+	andq %r8,%r8
+	jle Pos3
+	iaddq 1,%rax
+Pos3:
+	iaddq $-1,%rdx
+	jle Done
+	mrmovq 16(%rdi),%r8
+	rmmovq %r8,16(%rsi)
+	andq %r8,%r8
+	jle Done
+	iaddq 1,%rax
+
+
+# # Version 2.1 ！！ iaddq + 9*1展开                    Score	54.9/60.0
+# # You can modify this portion
+# 	# Loop header
+# 	#xorq %rax,%rax		# count = 0;
+# 	iaddq $-8,%rdx		# limit-=8
+# 	jle Pos1		# if so, goto ele1:
+
+# Loop:
+# # read val from src
+# 	mrmovq (%rdi),%r8
+# 	mrmovq 8(%rdi), %r9
+# 	mrmovq 16(%rdi), %r10
+# 	mrmovq 24(%rdi), %r11
+# 	mrmovq 32(%rdi), %r12
+# 	mrmovq 40(%rdi), %r13
+# 	mrmovq 48(%rdi), %r14
+# 	mrmovq 56(%rdi), %rbx
+# 	mrmovq 64(%rdi), %rbp
+
+# # store val to dst
+# 	rmmovq %r8, (%rsi)
+# 	rmmovq %r9, 8(%rsi)
+# 	rmmovq %r10, 16(%rsi)
+# 	rmmovq %r11, 24(%rsi)
+# 	rmmovq %r12, 32(%rsi)
+# 	rmmovq %r13, 40(%rsi)
+# 	rmmovq %r14, 48(%rsi)
+# 	rmmovq %rbx, 56(%rsi)
+# 	rmmovq %rbp, 64(%rsi)
+# ele1:
+# 	andq %r8,%r8		# val<=0?
+# 	jle ele2			# if so,goto ele2
+# 	iaddq $1,%rax		# count++ 
+# ele2:   
+# 	andq %r9, %r9          
+# 	jle ele3
+# 	iaddq $1, %rax
+# ele3:   
+# 	andq %r10, %r10
+# 	jle ele4
+# 	iaddq $1, %rax
+# ele4:   
+# 	andq %r11, %r11
+# 	jle ele5
+# 	iaddq $1, %rax
+# ele5:   
+# 	andq %r12, %r12
+# 	jle ele6
+# 	iaddq $1, %rax
+# ele6:   
+# 	andq %r13, %r13
+# 	jle ele7
+# 	iaddq $1, %rax
+# ele7:   
+# 	andq %r14, %r14
+# 	jle ele8
+# 	iaddq $1, %rax
+# ele8:   
+# 	andq %rbx, %rbx
+# 	jle ele9
+# 	iaddq $1, %rax
+# ele9:
+# 	andq %rbp,%rbp
+# 	jle End1
+# 	iaddq $1,%rax
+# End1:
+# 	iaddq $72,%rdi	# src+=9
+# 	iaddq $72,%rsi	# dst+=9
+# 	iaddq $-9,%rdx # len-=9
+# 	jg Loop
+
+# # 不够9个展开，剩余的进行循环,剩下的最多只有8个
+# Pos1:
+# 	iaddq $8,%rdx
+
+# 	iaddq $-1,%rdx
+# 	jge P1
+# 	jmp Done
+# P1:
+# 	mrmovq (%rdi),%r8
+# 	mrmovq 8(%rdi),%r9
+# 	rmmovq %r8,(%rsi)
+# 	andq %r8,%r8
+# 	jle Pos2
+# 	iaddq 1,%rax
+
+# Pos2:
+# 	iaddq $-1,%rdx
+# 	jge P2
+# 	jmp Done
+# P2:
+# 	mrmovq 16(%rdi),%r8
+# 	rmmovq %r9,8(%rsi)
+# 	andq %r9,%r9
+# 	jle Pos3
+# 	iaddq 1,%rax
+
+# Pos3:
+# 	iaddq $-1,%rdx
+# 	jge P3
+# 	jmp Done
+# P3:
+# 	mrmovq 24(%rdi),%r9
+# 	rmmovq %r8,16(%rsi)
+# 	andq %r8,%r8
+# 	jle Pos4
+# 	iaddq 1,%rax
+
+# Pos4:
+# 	iaddq $-1,%rdx
+# 	jge P4
+# 	jmp Done
+# P4:
+# 	mrmovq 32(%rdi),%r8
+# 	rmmovq %r9,24(%rsi)
+# 	andq %r9,%r9
+# 	jle Pos5
+# 	iaddq 1,%rax
+
+# Pos5:
+# 	iaddq $-1,%rdx
+# 	jge P5
+# 	jmp Done
+# P5:
+# 	mrmovq 40(%rdi),%r9
+# 	rmmovq %r8,32(%rsi)
+# 	andq %r8,%r8
+# 	jle Pos6
+# 	iaddq 1,%rax
+
+# Pos6:
+# 	iaddq $-1,%rdx
+# 	jge P6
+# 	jmp Done
+# P6:
+# 	mrmovq 48(%rdi),%r8
+# 	rmmovq %r9,40(%rsi)
+# 	andq %r9,%r9
+# 	jle Pos7
+# 	iaddq 1,%rax
+
+# Pos7:
+# 	iaddq $-1,%rdx
+# 	jge P7
+# 	jmp Done
+# P7:
+# 	mrmovq 56(%rdi),%r9
+# 	rmmovq %r8,48(%rsi)
+# 	andq %r8,%r8
+# 	jle Pos8
+# 	iaddq 1,%rax
+	
+# Pos8:
+# 	iaddq $-1,%rdx
+# 	jge P8
+# 	jmp Done
+# P8:
+# 	rmmovq %r9,56(%rsi)
+# 	andq %r9,%r9
+# 	jle Done
+# 	iaddq 1,%rax
+
+
+# # Version 2.1 ！！ iaddq + 9*1展开 + 算法流程优化		Score	57.7/60.0
+# # You can modify this portion
+# 	# Loop header
+# 	#xorq %rax,%rax		# count = 0;
+# 	iaddq $-8,%rdx		# limit-=8
+# 	jle Pos1		# if so, goto ele1:
+
+# Loop:
+# # read val from src
+# 	mrmovq (%rdi),%r8
+# 	mrmovq 8(%rdi), %r9
+# 	mrmovq 16(%rdi), %r10
+# 	mrmovq 24(%rdi), %r11
+# 	mrmovq 32(%rdi), %r12
+# 	mrmovq 40(%rdi), %r13
+# 	mrmovq 48(%rdi), %r14
+# 	mrmovq 56(%rdi), %rbx
+# 	mrmovq 64(%rdi), %rbp
+
+# # store val to dst
+# 	rmmovq %r8, (%rsi)
+# 	rmmovq %r9, 8(%rsi)
+# 	rmmovq %r10, 16(%rsi)
+# 	rmmovq %r11, 24(%rsi)
+# 	rmmovq %r12, 32(%rsi)
+# 	rmmovq %r13, 40(%rsi)
+# 	rmmovq %r14, 48(%rsi)
+# 	rmmovq %rbx, 56(%rsi)
+# 	rmmovq %rbp, 64(%rsi)
+# ele1:
+# 	andq %r8,%r8		# val<=0?
+# 	jle ele2			# if so,goto ele2
+# 	iaddq $1,%rax		# count++ 
+# ele2:   
+# 	andq %r9, %r9          
+# 	jle ele3
+# 	iaddq $1, %rax
+# ele3:   
+# 	andq %r10, %r10
+# 	jle ele4
+# 	iaddq $1, %rax
+# ele4:   
+# 	andq %r11, %r11
+# 	jle ele5
+# 	iaddq $1, %rax
+# ele5:   
+# 	andq %r12, %r12
+# 	jle ele6
+# 	iaddq $1, %rax
+# ele6:   
+# 	andq %r13, %r13
+# 	jle ele7
+# 	iaddq $1, %rax
+# ele7:   
+# 	andq %r14, %r14
+# 	jle ele8
+# 	iaddq $1, %rax
+# ele8:   
+# 	andq %rbx, %rbx
+# 	jle ele9
+# 	iaddq $1, %rax
+# ele9:
+# 	andq %rbp,%rbp
+# 	jle End1
+# 	iaddq $1,%rax
+# End1:
+# 	iaddq $72,%rdi	# src+=9
+# 	iaddq $72,%rsi	# dst+=9
+# 	iaddq $-9,%rdx # len-=9
+# 	jg Loop
+
+# # 不够9个展开，剩余的进行循环,剩下的最多只有8个
+# Pos1:
+# 	#iaddq $8,%rdx
+#     #iaddq $7,%rdx
+# 	jg P1
+# 	jmp Done
+# P1:
+# 	mrmovq (%rdi),%r8
+# 	rmmovq %r8,(%rsi)
+# 	andq %r8,%r8
+# 	jle Pos2
+# 	iaddq 1,%rax
+# Pos2:
+# 	iaddq $-1,%rdx
+# 	jge P2
+# 	jmp Done
+# P2:
+# 	mrmovq 8(%rdi),%r8
+# 	rmmovq %r8,8(%rsi)
+# 	andq %r8,%r8
+# 	jle Pos3
+# 	iaddq 1,%rax
+# Pos3:
+# 	iaddq $-1,%rdx
+# 	jge P3
+# 	jmp Done
+# P3:
+# 	mrmovq 16(%rdi),%r8
+# 	rmmovq %r8,16(%rsi)
+# 	andq %r8,%r8
+# 	jle Pos4
+# 	iaddq 1,%rax
+# Pos4:
+# 	iaddq $-1,%rdx
+# 	jge P4
+# 	jmp Done
+# P4:
+# 	mrmovq 24(%rdi),%r8
+# 	rmmovq %r8,24(%rsi)
+# 	andq %r8,%r8
+# 	jle Pos5
+# 	iaddq 1,%rax
+# Pos5:
+# 	iaddq $-1,%rdx
+# 	jge P5
+# 	jmp Done
+# P5:
+# 	mrmovq 32(%rdi),%r8
+# 	rmmovq %r8,32(%rsi)
+# 	andq %r8,%r8
+# 	jle Pos6
+# 	iaddq 1,%rax
+# Pos6:
+# 	iaddq $-1,%rdx
+# 	jge P6
+# 	jmp Done
+# P6:
+# 	mrmovq 40(%rdi),%r8
+# 	rmmovq %r8,40(%rsi)
+# 	andq %r8,%r8
+# 	jle Pos7
+# 	iaddq 1,%rax
+# Pos7:
+# 	iaddq $-1,%rdx
+# 	jge P7
+# 	jmp Done
+# P7:
+# 	mrmovq 48(%rdi),%r8
+# 	rmmovq %r8,48(%rsi)
+# 	andq %r8,%r8
+# 	jle Pos8
+# 	iaddq 1,%rax
+# Pos8:
+# 	iaddq $-1,%rdx
+# 	jge P8
+# 	jmp Done
+# P8:
+# 	mrmovq 56(%rdi),%r8
+# 	rmmovq %r8,56(%rsi)
+# 	andq %r8,%r8
+# 	jle Done
+# 	iaddq 1,%rax
+
+
+##################################################################
+# Do not modify the following section of code
+# Function epilogue.
+Done:
+	ret
+##################################################################
+# Keep the following label at the end of your function
+End:
+#/* $end ncopy-ys */

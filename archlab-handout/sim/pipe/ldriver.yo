@@ -1,0 +1,851 @@
+                            | #######################################################################
+                            | # Test for copying block of size 63;
+                            | #######################################################################
+0x000:                      | 	.pos 0
+0x000: 30f45806000000000000 | main:	irmovq Stack, %rsp  	# Set up stack pointer
+                            | 
+                            | 	# Set up arguments for copy function and then invoke it
+0x00a: 30f23f00000000000000 | 	irmovq $63, %rdx		# src and dst have 63 elements
+0x014: 30f6d803000000000000 | 	irmovq dest, %rsi	# dst array
+0x01e: 30f7c801000000000000 | 	irmovq src, %rdi	# src array
+0x028: 803200000000000000   | 	call ncopy		 
+0x031: 00                   | 	halt			# should halt with num nonzeros in %rax
+0x032:                      | StartFun:
+                            | #/* $begin ncopy-ys */
+                            | ##################################################################
+                            | # ncopy.ys - Copy a src block of len words to dst.
+                            | # Return the number of positive words (>0) contained in src.
+                            | #
+                            | # Include your name and ID here.
+                            | #
+                            | # Describe how and why you modified the baseline code.
+                            | #
+                            | ##################################################################
+                            | # Do not modify this portion
+                            | # Function prologue.
+                            | # %rdi = src, %rsi = dst, %rdx = len
+0x032:                      | ncopy:
+                            | 
+                            | ##################################################################
+                            | # # You can modify this portion
+                            | # 	# Loop header
+                            | # 	xorq %rax,%rax		# count = 0;
+                            | # 	andq %rdx,%rdx		# len <= 0?
+                            | # 	jle Done		# if so, goto Done:
+                            | 
+                            | # Loop:	mrmovq (%rdi), %r10	# read val from src...
+                            | # 	rmmovq %r10, (%rsi)	# ...and store it to dst
+                            | # 	andq %r10, %r10		# val <= 0?
+                            | # 	jle Npos		# if so, goto Npos:
+                            | # 	irmovq $1, %r10
+                            | # 	addq %r10, %rax		# count++
+                            | # Npos:	irmovq $1, %r10
+                            | # 	subq %r10, %rdx		# len--
+                            | # 	irmovq $8, %r10
+                            | # 	addq %r10, %rdi		# src++
+                            | # 	addq %r10, %rsi		# dst++
+                            | # 	andq %rdx,%rdx		# len > 0?
+                            | # 	jg Loop			# if so, goto Loop:
+                            | 
+                            | # # Version 1.0 ！！ iaddq
+                            | # # You can modify this portion
+                            | # 	# Loop header
+                            | # 	xorq %rax,%rax		# count = 0;
+                            | # 	andq %rdx,%rdx		# len <= 0?
+                            | # 	jle Done		# if so, goto Done:
+                            | 
+                            | # Loop:	mrmovq (%rdi), %r10	# read val from src...
+                            | # 	rmmovq %r10, (%rsi)	# ...and store it to dst
+                            | # 	andq %r10, %r10		# val <= 0?
+                            | # 	jle Npos		# if so, goto Npos:
+                            | # 	iaddq $1, %rax		# count++
+                            | # Npos:	
+                            | # 	iaddq $8, %rdi		# src++
+                            | # 	iaddq $8, %rsi		# dst++
+                            | # 	iaddq $-1,%rdx		# len--,同时设置状态码
+                            | # 	jg Loop			# if so, goto Loop:
+                            | 
+                            | 
+                            | # # Version 2.0 ！！ iaddq + 8*1展开 
+                            | # # You can modify this portion
+                            | # 	# Loop header
+                            | # 	xorq %rax,%rax		# count = 0;
+                            | # 	rrmovq %rdx,%rcx	# limit=len
+                            | # 	iaddq $-7,%rcx		# limit-=7
+                            | # 	jle Rest		# if so, goto Rest:
+                            | 
+                            | # Loop:
+                            | # # read val from src
+                            | # 	mrmovq (%rdi),%r8
+                            | # 	mrmovq 8(%rdi), %r9
+                            | # 	mrmovq 16(%rdi), %r10
+                            | # 	mrmovq 24(%rdi), %r11
+                            | # 	mrmovq 32(%rdi), %r12
+                            | # 	mrmovq 40(%rdi), %r13
+                            | # 	mrmovq 48(%rdi), %r14
+                            | # 	mrmovq 56(%rdi), %rbx
+                            | # # store val to dst
+                            | # 	rmmovq %r8, (%rsi)
+                            | # 	rmmovq %r9, 8(%rsi)
+                            | # 	rmmovq %r10, 16(%rsi)
+                            | # 	rmmovq %r11, 24(%rsi)
+                            | # 	rmmovq %r12, 32(%rsi)
+                            | # 	rmmovq %r13, 40(%rsi)
+                            | # 	rmmovq %r14, 48(%rsi)
+                            | # 	rmmovq %rbx, 56(%rsi)
+                            | 
+                            | # ele1:
+                            | # 	andq %r8,%r8		# val<=0?
+                            | # 	jle ele2			# if so,goto ele2
+                            | # 	iaddq $1,%rax		# count++ 
+                            | # ele2:   
+                            | # 	andq %r9, %r9          
+                            | # 	jle ele3
+                            | # 	iaddq $1, %rax
+                            | # ele3:   
+                            | # 	andq %r10, %r10
+                            | # 	jle ele4
+                            | # 	iaddq $1, %rax
+                            | # ele4:   
+                            | # 	andq %r11, %r11
+                            | # 	jle ele5
+                            | # 	iaddq $1, %rax
+                            | # ele5:   
+                            | # 	andq %r12, %r12
+                            | # 	jle ele6
+                            | # 	iaddq $1, %rax
+                            | # ele6:   
+                            | # 	andq %r13, %r13
+                            | # 	jle ele7
+                            | # 	iaddq $1, %rax
+                            | # ele7:   
+                            | # 	andq %r14, %r14
+                            | # 	jle ele8
+                            | # 	iaddq $1, %rax
+                            | # ele8:   
+                            | # 	andq %rbx, %rbx
+                            | # 	jle End1
+                            | # 	iaddq $1, %rax
+                            | # End1:
+                            | # 	iaddq $64,%rdi	# src+=8
+                            | # 	iaddq $64,%rsi	# dst+=8
+                            | # 	iaddq $-8,%rdx # len-=8
+                            | # 	iaddq $-8,%rcx	# limit-=8
+                            | # 	jg Loop
+                            | 
+                            | # Rest:	# 不够8个展开，剩余的进行循环
+                            | # 	andq %rdx,%rdx		# len<=0
+                            | # 	jle Done
+                            | # LoopRest:
+                            | # 	mrmovq (%rdi),%rbx	
+                            | # 	rmmovq %rbx,(%rsi)
+                            | # 	andq %rbx,%rbx
+                            | # 	jle End2
+                            | # 	iaddq $1,%rax
+                            | # End2:
+                            | # 	iaddq $8,%rdi
+                            | # 	iaddq $8,%rsi
+                            | # 	iaddq $-1,%rdx
+                            | # 	jg LoopRest:
+                            | 
+                            | 
+                            | # # Version 2.1 ！！ iaddq + 9*1展开                  # Score	50.8/60.0
+                            | # # You can modify this portion
+                            | # 	# Loop header
+                            | # 	#xorq %rax,%rax		# count = 0;
+                            | # 	iaddq $-8,%rdx		# limit-=8
+                            | # 	jle Pos1		# if so, goto ele1:
+                            | 
+                            | # Loop:
+                            | # # read val from src 
+                            | # 	mrmovq (%rdi),%r8
+                            | # 	mrmovq 8(%rdi), %r9
+                            | # 	mrmovq 16(%rdi), %r10
+                            | # 	mrmovq 24(%rdi), %r11
+                            | # 	mrmovq 32(%rdi), %r12
+                            | # 	mrmovq 40(%rdi), %r13
+                            | # 	mrmovq 48(%rdi), %r14
+                            | # 	mrmovq 56(%rdi), %rbx
+                            | # 	mrmovq 64(%rdi), %rbp
+                            | 
+                            | # # store val to dst
+                            | # 	rmmovq %r8, (%rsi)
+                            | # 	rmmovq %r9, 8(%rsi)
+                            | # 	rmmovq %r10, 16(%rsi)
+                            | # 	rmmovq %r11, 24(%rsi)
+                            | # 	rmmovq %r12, 32(%rsi)
+                            | # 	rmmovq %r13, 40(%rsi)
+                            | # 	rmmovq %r14, 48(%rsi)
+                            | # 	rmmovq %rbx, 56(%rsi)
+                            | # 	rmmovq %rbp, 64(%rsi)
+                            | # ele1:
+                            | # 	andq %r8,%r8		# val<=0?
+                            | # 	jle ele2			# if so,goto ele2
+                            | # 	iaddq $1,%rax		# count++ 
+                            | # ele2:   
+                            | # 	andq %r9, %r9          
+                            | # 	jle ele3
+                            | # 	iaddq $1, %rax
+                            | # ele3:   
+                            | # 	andq %r10, %r10
+                            | # 	jle ele4
+                            | # 	iaddq $1, %rax
+                            | # ele4:   
+                            | # 	andq %r11, %r11
+                            | # 	jle ele5
+                            | # 	iaddq $1, %rax
+                            | # ele5:   
+                            | # 	andq %r12, %r12
+                            | # 	jle ele6
+                            | # 	iaddq $1, %rax
+                            | # ele6:   
+                            | # 	andq %r13, %r13
+                            | # 	jle ele7
+                            | # 	iaddq $1, %rax
+                            | # ele7:   
+                            | # 	andq %r14, %r14
+                            | # 	jle ele8
+                            | # 	iaddq $1, %rax
+                            | # ele8:   
+                            | # 	andq %rbx, %rbx
+                            | # 	jle ele9
+                            | # 	iaddq $1, %rax
+                            | # ele9:
+                            | # 	andq %rbp,%rbp
+                            | # 	jle End1
+                            | # 	iaddq $1,%rax
+                            | # End1:
+                            | # 	iaddq $72,%rdi	# src+=9
+                            | # 	iaddq $72,%rsi	# dst+=9
+                            | # 	iaddq $-9,%rdx # len-=9
+                            | # 	jg Loop
+                            | 
+                            | # # 不够9个展开，剩余的进行循环,剩下的最多只有8个
+                            | # Pos1:
+                            | # 	iaddq $8,%rdx
+                            | 
+                            | # 	iaddq $-1,%rdx
+                            | # 	jl Done
+                            | # 	mrmovq (%rdi),%r8
+                            | # 	rmmovq %r8,(%rsi)
+                            | # 	andq %r8,%r8
+                            | # 	jle Pos2
+                            | # 	iaddq 1,%rax
+                            | # Pos2:
+                            | # 	iaddq $-1,%rdx
+                            | # 	jl Done
+                            | # 	mrmovq 8(%rdi),%r8
+                            | # 	rmmovq %r8,8(%rsi)
+                            | # 	andq %r8,%r8
+                            | # 	jle Pos3
+                            | # 	iaddq 1,%rax
+                            | # Pos3:
+                            | # 	iaddq $-1,%rdx
+                            | # 	jl Done
+                            | # 	mrmovq 16(%rdi),%r8
+                            | # 	rmmovq %r8,16(%rsi)
+                            | # 	andq %r8,%r8
+                            | # 	jle Pos4
+                            | # 	iaddq 1,%rax
+                            | # Pos4:
+                            | # 	iaddq $-1,%rdx
+                            | # 	jl Done
+                            | # 	mrmovq 24(%rdi),%r8
+                            | # 	rmmovq %r8,24(%rsi)
+                            | # 	andq %r8,%r8
+                            | # 	jle Pos5
+                            | # 	iaddq 1,%rax
+                            | # Pos5:
+                            | # 	iaddq $-1,%rdx
+                            | # 	jl Done
+                            | # 	mrmovq 32(%rdi),%r8
+                            | # 	rmmovq %r8,32(%rsi)
+                            | # 	andq %r8,%r8
+                            | # 	jle Pos6
+                            | # 	iaddq 1,%rax
+                            | # Pos6:
+                            | # 	iaddq $-1,%rdx
+                            | # 	jl Done
+                            | # 	mrmovq 40(%rdi),%r8
+                            | # 	rmmovq %r8,40(%rsi)
+                            | # 	andq %r8,%r8
+                            | # 	jle Pos7
+                            | # 	iaddq 1,%rax
+                            | # Pos7:
+                            | # 	iaddq $-1,%rdx
+                            | # 	jl Done
+                            | # 	mrmovq 48(%rdi),%r8
+                            | # 	rmmovq %r8,48(%rsi)
+                            | # 	andq %r8,%r8
+                            | # 	jle Pos8
+                            | # 	iaddq 1,%rax
+                            | # Pos8:
+                            | # 	iaddq $-1,%rdx
+                            | # 	jl Done
+                            | # 	mrmovq 56(%rdi),%r8
+                            | # 	rmmovq %r8,56(%rsi)
+                            | # 	andq %r8,%r8
+                            | # 	jle Done
+                            | # 	iaddq 1,%rax
+                            | 
+                            | 
+                            | # Version 3 ！！ iaddq + 4*1展开 + 算法流程优化		Score	60.0/60.0 
+                            | # You can modify this portion
+                            | 	# Loop header
+                            | 	#xorq %rax,%rax		# count = 0;
+0x032: c0f2fdffffffffffffff | 	iaddq $-3,%rdx		# limit-=3
+0x03c: 711001000000000000   | 	jle Pos1		# if so, goto ele1:
+                            | 
+0x045:                      | Loop:
+                            | # read val from src
+0x045: 50870000000000000000 | 	mrmovq (%rdi),%r8
+0x04f: 50970800000000000000 | 	mrmovq 8(%rdi), %r9
+0x059: 50a71000000000000000 | 	mrmovq 16(%rdi), %r10
+0x063: 50b71800000000000000 | 	mrmovq 24(%rdi), %r11
+                            | 
+                            | 
+                            | # store val to dst
+0x06d: 40860000000000000000 | 	rmmovq %r8, (%rsi)
+0x077: 40960800000000000000 | 	rmmovq %r9, 8(%rsi)
+0x081: 40a61000000000000000 | 	rmmovq %r10, 16(%rsi)
+0x08b: 40b61800000000000000 | 	rmmovq %r11, 24(%rsi)
+                            | 	
+0x095:                      | ele1:
+0x095: 6288                 | 	andq %r8,%r8		# val<=0?
+0x097: 71aa00000000000000   | 	jle ele2			# if so,goto ele2
+0x0a0: c0f00100000000000000 | 	iaddq $1,%rax		# count++ 
+0x0aa:                      | ele2:   
+0x0aa: 6299                 | 	andq %r9, %r9          
+0x0ac: 71bf00000000000000   | 	jle ele3
+0x0b5: c0f00100000000000000 | 	iaddq $1, %rax
+0x0bf:                      | ele3:   
+0x0bf: 62aa                 | 	andq %r10, %r10
+0x0c1: 71d400000000000000   | 	jle ele4
+0x0ca: c0f00100000000000000 | 	iaddq $1, %rax
+0x0d4:                      | ele4:   
+0x0d4: 62bb                 | 	andq %r11, %r11
+0x0d6: 71e900000000000000   | 	jle End1
+0x0df: c0f00100000000000000 | 	iaddq $1, %rax
+0x0e9:                      | End1:
+0x0e9: c0f72000000000000000 | 	iaddq $32,%rdi	# src+=9
+0x0f3: c0f62000000000000000 | 	iaddq $32,%rsi	# dst+=9
+0x0fd: c0f2fcffffffffffffff | 	iaddq $-4,%rdx # len-=9
+0x107: 764500000000000000   | 	jg Loop
+                            | 
+                            | # 不够4个展开，剩余的进行循环,剩下的最多只有3个
+0x110:                      | Pos1:
+0x110: c0f20300000000000000 | 	iaddq $3,%rdx
+                            | 
+0x11a: 71c401000000000000   | 	jle Done
+0x123: 50870000000000000000 | 	mrmovq (%rdi),%r8
+0x12d: 40860000000000000000 | 	rmmovq %r8,(%rsi)
+0x137: 6288                 | 	andq %r8,%r8
+0x139: 714c01000000000000   | 	jle Pos2
+0x142: c0f00100000000000000 | 	iaddq 1,%rax
+0x14c:                      | Pos2:
+0x14c: c0f2ffffffffffffffff | 	iaddq $-1,%rdx
+0x156: 71c401000000000000   | 	jle Done
+0x15f: 50870800000000000000 | 	mrmovq 8(%rdi),%r8
+0x169: 40860800000000000000 | 	rmmovq %r8,8(%rsi)
+0x173: 6288                 | 	andq %r8,%r8
+0x175: 718801000000000000   | 	jle Pos3
+0x17e: c0f00100000000000000 | 	iaddq 1,%rax
+0x188:                      | Pos3:
+0x188: c0f2ffffffffffffffff | 	iaddq $-1,%rdx
+0x192: 71c401000000000000   | 	jle Done
+0x19b: 50871000000000000000 | 	mrmovq 16(%rdi),%r8
+0x1a5: 40861000000000000000 | 	rmmovq %r8,16(%rsi)
+0x1af: 6288                 | 	andq %r8,%r8
+0x1b1: 71c401000000000000   | 	jle Done
+0x1ba: c0f00100000000000000 | 	iaddq 1,%rax
+                            | 
+                            | 
+                            | # # Version 2.1 ！！ iaddq + 9*1展开                    Score	54.9/60.0
+                            | # # You can modify this portion
+                            | # 	# Loop header
+                            | # 	#xorq %rax,%rax		# count = 0;
+                            | # 	iaddq $-8,%rdx		# limit-=8
+                            | # 	jle Pos1		# if so, goto ele1:
+                            | 
+                            | # Loop:
+                            | # # read val from src
+                            | # 	mrmovq (%rdi),%r8
+                            | # 	mrmovq 8(%rdi), %r9
+                            | # 	mrmovq 16(%rdi), %r10
+                            | # 	mrmovq 24(%rdi), %r11
+                            | # 	mrmovq 32(%rdi), %r12
+                            | # 	mrmovq 40(%rdi), %r13
+                            | # 	mrmovq 48(%rdi), %r14
+                            | # 	mrmovq 56(%rdi), %rbx
+                            | # 	mrmovq 64(%rdi), %rbp
+                            | 
+                            | # # store val to dst
+                            | # 	rmmovq %r8, (%rsi)
+                            | # 	rmmovq %r9, 8(%rsi)
+                            | # 	rmmovq %r10, 16(%rsi)
+                            | # 	rmmovq %r11, 24(%rsi)
+                            | # 	rmmovq %r12, 32(%rsi)
+                            | # 	rmmovq %r13, 40(%rsi)
+                            | # 	rmmovq %r14, 48(%rsi)
+                            | # 	rmmovq %rbx, 56(%rsi)
+                            | # 	rmmovq %rbp, 64(%rsi)
+                            | # ele1:
+                            | # 	andq %r8,%r8		# val<=0?
+                            | # 	jle ele2			# if so,goto ele2
+                            | # 	iaddq $1,%rax		# count++ 
+                            | # ele2:   
+                            | # 	andq %r9, %r9          
+                            | # 	jle ele3
+                            | # 	iaddq $1, %rax
+                            | # ele3:   
+                            | # 	andq %r10, %r10
+                            | # 	jle ele4
+                            | # 	iaddq $1, %rax
+                            | # ele4:   
+                            | # 	andq %r11, %r11
+                            | # 	jle ele5
+                            | # 	iaddq $1, %rax
+                            | # ele5:   
+                            | # 	andq %r12, %r12
+                            | # 	jle ele6
+                            | # 	iaddq $1, %rax
+                            | # ele6:   
+                            | # 	andq %r13, %r13
+                            | # 	jle ele7
+                            | # 	iaddq $1, %rax
+                            | # ele7:   
+                            | # 	andq %r14, %r14
+                            | # 	jle ele8
+                            | # 	iaddq $1, %rax
+                            | # ele8:   
+                            | # 	andq %rbx, %rbx
+                            | # 	jle ele9
+                            | # 	iaddq $1, %rax
+                            | # ele9:
+                            | # 	andq %rbp,%rbp
+                            | # 	jle End1
+                            | # 	iaddq $1,%rax
+                            | # End1:
+                            | # 	iaddq $72,%rdi	# src+=9
+                            | # 	iaddq $72,%rsi	# dst+=9
+                            | # 	iaddq $-9,%rdx # len-=9
+                            | # 	jg Loop
+                            | 
+                            | # # 不够9个展开，剩余的进行循环,剩下的最多只有8个
+                            | # Pos1:
+                            | # 	iaddq $8,%rdx
+                            | 
+                            | # 	iaddq $-1,%rdx
+                            | # 	jge P1
+                            | # 	jmp Done
+                            | # P1:
+                            | # 	mrmovq (%rdi),%r8
+                            | # 	mrmovq 8(%rdi),%r9
+                            | # 	rmmovq %r8,(%rsi)
+                            | # 	andq %r8,%r8
+                            | # 	jle Pos2
+                            | # 	iaddq 1,%rax
+                            | 
+                            | # Pos2:
+                            | # 	iaddq $-1,%rdx
+                            | # 	jge P2
+                            | # 	jmp Done
+                            | # P2:
+                            | # 	mrmovq 16(%rdi),%r8
+                            | # 	rmmovq %r9,8(%rsi)
+                            | # 	andq %r9,%r9
+                            | # 	jle Pos3
+                            | # 	iaddq 1,%rax
+                            | 
+                            | # Pos3:
+                            | # 	iaddq $-1,%rdx
+                            | # 	jge P3
+                            | # 	jmp Done
+                            | # P3:
+                            | # 	mrmovq 24(%rdi),%r9
+                            | # 	rmmovq %r8,16(%rsi)
+                            | # 	andq %r8,%r8
+                            | # 	jle Pos4
+                            | # 	iaddq 1,%rax
+                            | 
+                            | # Pos4:
+                            | # 	iaddq $-1,%rdx
+                            | # 	jge P4
+                            | # 	jmp Done
+                            | # P4:
+                            | # 	mrmovq 32(%rdi),%r8
+                            | # 	rmmovq %r9,24(%rsi)
+                            | # 	andq %r9,%r9
+                            | # 	jle Pos5
+                            | # 	iaddq 1,%rax
+                            | 
+                            | # Pos5:
+                            | # 	iaddq $-1,%rdx
+                            | # 	jge P5
+                            | # 	jmp Done
+                            | # P5:
+                            | # 	mrmovq 40(%rdi),%r9
+                            | # 	rmmovq %r8,32(%rsi)
+                            | # 	andq %r8,%r8
+                            | # 	jle Pos6
+                            | # 	iaddq 1,%rax
+                            | 
+                            | # Pos6:
+                            | # 	iaddq $-1,%rdx
+                            | # 	jge P6
+                            | # 	jmp Done
+                            | # P6:
+                            | # 	mrmovq 48(%rdi),%r8
+                            | # 	rmmovq %r9,40(%rsi)
+                            | # 	andq %r9,%r9
+                            | # 	jle Pos7
+                            | # 	iaddq 1,%rax
+                            | 
+                            | # Pos7:
+                            | # 	iaddq $-1,%rdx
+                            | # 	jge P7
+                            | # 	jmp Done
+                            | # P7:
+                            | # 	mrmovq 56(%rdi),%r9
+                            | # 	rmmovq %r8,48(%rsi)
+                            | # 	andq %r8,%r8
+                            | # 	jle Pos8
+                            | # 	iaddq 1,%rax
+                            | 	
+                            | # Pos8:
+                            | # 	iaddq $-1,%rdx
+                            | # 	jge P8
+                            | # 	jmp Done
+                            | # P8:
+                            | # 	rmmovq %r9,56(%rsi)
+                            | # 	andq %r9,%r9
+                            | # 	jle Done
+                            | # 	iaddq 1,%rax
+                            | 
+                            | 
+                            | # # Version 2.1 ！！ iaddq + 9*1展开 + 算法流程优化		Score	57.7/60.0
+                            | # # You can modify this portion
+                            | # 	# Loop header
+                            | # 	#xorq %rax,%rax		# count = 0;
+                            | # 	iaddq $-8,%rdx		# limit-=8
+                            | # 	jle Pos1		# if so, goto ele1:
+                            | 
+                            | # Loop:
+                            | # # read val from src
+                            | # 	mrmovq (%rdi),%r8
+                            | # 	mrmovq 8(%rdi), %r9
+                            | # 	mrmovq 16(%rdi), %r10
+                            | # 	mrmovq 24(%rdi), %r11
+                            | # 	mrmovq 32(%rdi), %r12
+                            | # 	mrmovq 40(%rdi), %r13
+                            | # 	mrmovq 48(%rdi), %r14
+                            | # 	mrmovq 56(%rdi), %rbx
+                            | # 	mrmovq 64(%rdi), %rbp
+                            | 
+                            | # # store val to dst
+                            | # 	rmmovq %r8, (%rsi)
+                            | # 	rmmovq %r9, 8(%rsi)
+                            | # 	rmmovq %r10, 16(%rsi)
+                            | # 	rmmovq %r11, 24(%rsi)
+                            | # 	rmmovq %r12, 32(%rsi)
+                            | # 	rmmovq %r13, 40(%rsi)
+                            | # 	rmmovq %r14, 48(%rsi)
+                            | # 	rmmovq %rbx, 56(%rsi)
+                            | # 	rmmovq %rbp, 64(%rsi)
+                            | # ele1:
+                            | # 	andq %r8,%r8		# val<=0?
+                            | # 	jle ele2			# if so,goto ele2
+                            | # 	iaddq $1,%rax		# count++ 
+                            | # ele2:   
+                            | # 	andq %r9, %r9          
+                            | # 	jle ele3
+                            | # 	iaddq $1, %rax
+                            | # ele3:   
+                            | # 	andq %r10, %r10
+                            | # 	jle ele4
+                            | # 	iaddq $1, %rax
+                            | # ele4:   
+                            | # 	andq %r11, %r11
+                            | # 	jle ele5
+                            | # 	iaddq $1, %rax
+                            | # ele5:   
+                            | # 	andq %r12, %r12
+                            | # 	jle ele6
+                            | # 	iaddq $1, %rax
+                            | # ele6:   
+                            | # 	andq %r13, %r13
+                            | # 	jle ele7
+                            | # 	iaddq $1, %rax
+                            | # ele7:   
+                            | # 	andq %r14, %r14
+                            | # 	jle ele8
+                            | # 	iaddq $1, %rax
+                            | # ele8:   
+                            | # 	andq %rbx, %rbx
+                            | # 	jle ele9
+                            | # 	iaddq $1, %rax
+                            | # ele9:
+                            | # 	andq %rbp,%rbp
+                            | # 	jle End1
+                            | # 	iaddq $1,%rax
+                            | # End1:
+                            | # 	iaddq $72,%rdi	# src+=9
+                            | # 	iaddq $72,%rsi	# dst+=9
+                            | # 	iaddq $-9,%rdx # len-=9
+                            | # 	jg Loop
+                            | 
+                            | # # 不够9个展开，剩余的进行循环,剩下的最多只有8个
+                            | # Pos1:
+                            | # 	#iaddq $8,%rdx
+                            | #     #iaddq $7,%rdx
+                            | # 	jg P1
+                            | # 	jmp Done
+                            | # P1:
+                            | # 	mrmovq (%rdi),%r8
+                            | # 	rmmovq %r8,(%rsi)
+                            | # 	andq %r8,%r8
+                            | # 	jle Pos2
+                            | # 	iaddq 1,%rax
+                            | # Pos2:
+                            | # 	iaddq $-1,%rdx
+                            | # 	jge P2
+                            | # 	jmp Done
+                            | # P2:
+                            | # 	mrmovq 8(%rdi),%r8
+                            | # 	rmmovq %r8,8(%rsi)
+                            | # 	andq %r8,%r8
+                            | # 	jle Pos3
+                            | # 	iaddq 1,%rax
+                            | # Pos3:
+                            | # 	iaddq $-1,%rdx
+                            | # 	jge P3
+                            | # 	jmp Done
+                            | # P3:
+                            | # 	mrmovq 16(%rdi),%r8
+                            | # 	rmmovq %r8,16(%rsi)
+                            | # 	andq %r8,%r8
+                            | # 	jle Pos4
+                            | # 	iaddq 1,%rax
+                            | # Pos4:
+                            | # 	iaddq $-1,%rdx
+                            | # 	jge P4
+                            | # 	jmp Done
+                            | # P4:
+                            | # 	mrmovq 24(%rdi),%r8
+                            | # 	rmmovq %r8,24(%rsi)
+                            | # 	andq %r8,%r8
+                            | # 	jle Pos5
+                            | # 	iaddq 1,%rax
+                            | # Pos5:
+                            | # 	iaddq $-1,%rdx
+                            | # 	jge P5
+                            | # 	jmp Done
+                            | # P5:
+                            | # 	mrmovq 32(%rdi),%r8
+                            | # 	rmmovq %r8,32(%rsi)
+                            | # 	andq %r8,%r8
+                            | # 	jle Pos6
+                            | # 	iaddq 1,%rax
+                            | # Pos6:
+                            | # 	iaddq $-1,%rdx
+                            | # 	jge P6
+                            | # 	jmp Done
+                            | # P6:
+                            | # 	mrmovq 40(%rdi),%r8
+                            | # 	rmmovq %r8,40(%rsi)
+                            | # 	andq %r8,%r8
+                            | # 	jle Pos7
+                            | # 	iaddq 1,%rax
+                            | # Pos7:
+                            | # 	iaddq $-1,%rdx
+                            | # 	jge P7
+                            | # 	jmp Done
+                            | # P7:
+                            | # 	mrmovq 48(%rdi),%r8
+                            | # 	rmmovq %r8,48(%rsi)
+                            | # 	andq %r8,%r8
+                            | # 	jle Pos8
+                            | # 	iaddq 1,%rax
+                            | # Pos8:
+                            | # 	iaddq $-1,%rdx
+                            | # 	jge P8
+                            | # 	jmp Done
+                            | # P8:
+                            | # 	mrmovq 56(%rdi),%r8
+                            | # 	rmmovq %r8,56(%rsi)
+                            | # 	andq %r8,%r8
+                            | # 	jle Done
+                            | # 	iaddq 1,%rax
+                            | 
+                            | 
+                            | ##################################################################
+                            | # Do not modify the following section of code
+                            | # Function epilogue.
+0x1c4:                      | Done:
+0x1c4: 90                   | 	ret
+                            | ##################################################################
+                            | # Keep the following label at the end of your function
+0x1c5:                      | End:
+                            | #/* $end ncopy-ys */
+0x1c5:                      | EndFun:
+                            | 
+                            | ###############################
+                            | # Source and destination blocks 
+                            | ###############################
+0x1c8:                      | 	.align 8
+0x1c8:                      | src:
+0x1c8: ffffffffffffffff     | 	.quad -1
+0x1d0: feffffffffffffff     | 	.quad -2
+0x1d8: fdffffffffffffff     | 	.quad -3
+0x1e0: fcffffffffffffff     | 	.quad -4
+0x1e8: fbffffffffffffff     | 	.quad -5
+0x1f0: faffffffffffffff     | 	.quad -6
+0x1f8: f9ffffffffffffff     | 	.quad -7
+0x200: 0800000000000000     | 	.quad 8
+0x208: 0900000000000000     | 	.quad 9
+0x210: 0a00000000000000     | 	.quad 10
+0x218: f5ffffffffffffff     | 	.quad -11
+0x220: 0c00000000000000     | 	.quad 12
+0x228: f3ffffffffffffff     | 	.quad -13
+0x230: 0e00000000000000     | 	.quad 14
+0x238: 0f00000000000000     | 	.quad 15
+0x240: f0ffffffffffffff     | 	.quad -16
+0x248: 1100000000000000     | 	.quad 17
+0x250: eeffffffffffffff     | 	.quad -18
+0x258: edffffffffffffff     | 	.quad -19
+0x260: 1400000000000000     | 	.quad 20
+0x268: 1500000000000000     | 	.quad 21
+0x270: eaffffffffffffff     | 	.quad -22
+0x278: 1700000000000000     | 	.quad 23
+0x280: e8ffffffffffffff     | 	.quad -24
+0x288: e7ffffffffffffff     | 	.quad -25
+0x290: e6ffffffffffffff     | 	.quad -26
+0x298: 1b00000000000000     | 	.quad 27
+0x2a0: 1c00000000000000     | 	.quad 28
+0x2a8: e3ffffffffffffff     | 	.quad -29
+0x2b0: e2ffffffffffffff     | 	.quad -30
+0x2b8: 1f00000000000000     | 	.quad 31
+0x2c0: e0ffffffffffffff     | 	.quad -32
+0x2c8: 2100000000000000     | 	.quad 33
+0x2d0: deffffffffffffff     | 	.quad -34
+0x2d8: ddffffffffffffff     | 	.quad -35
+0x2e0: 2400000000000000     | 	.quad 36
+0x2e8: 2500000000000000     | 	.quad 37
+0x2f0: 2600000000000000     | 	.quad 38
+0x2f8: d9ffffffffffffff     | 	.quad -39
+0x300: 2800000000000000     | 	.quad 40
+0x308: d7ffffffffffffff     | 	.quad -41
+0x310: 2a00000000000000     | 	.quad 42
+0x318: 2b00000000000000     | 	.quad 43
+0x320: 2c00000000000000     | 	.quad 44
+0x328: d3ffffffffffffff     | 	.quad -45
+0x330: 2e00000000000000     | 	.quad 46
+0x338: d1ffffffffffffff     | 	.quad -47
+0x340: d0ffffffffffffff     | 	.quad -48
+0x348: 3100000000000000     | 	.quad 49
+0x350: ceffffffffffffff     | 	.quad -50
+0x358: 3300000000000000     | 	.quad 51
+0x360: 3400000000000000     | 	.quad 52
+0x368: cbffffffffffffff     | 	.quad -53
+0x370: caffffffffffffff     | 	.quad -54
+0x378: 3700000000000000     | 	.quad 55
+0x380: c8ffffffffffffff     | 	.quad -56
+0x388: c7ffffffffffffff     | 	.quad -57
+0x390: 3a00000000000000     | 	.quad 58
+0x398: 3b00000000000000     | 	.quad 59
+0x3a0: c4ffffffffffffff     | 	.quad -60
+0x3a8: 3d00000000000000     | 	.quad 61
+0x3b0: 3e00000000000000     | 	.quad 62
+0x3b8: 3f00000000000000     | 	.quad 63
+0x3c0: fadebc0000000000     | 	.quad 0xbcdefa # This shouldn't get moved
+                            | 
+0x3d0:                      | 	.align 16
+0x3d0:                      | Predest:
+0x3d0: fadebc0000000000     | 	.quad 0xbcdefa
+0x3d8:                      | dest:
+0x3d8: abefcd0000000000     | 	.quad 0xcdefab
+0x3e0: abefcd0000000000     | 	.quad 0xcdefab
+0x3e8: abefcd0000000000     | 	.quad 0xcdefab
+0x3f0: abefcd0000000000     | 	.quad 0xcdefab
+0x3f8: abefcd0000000000     | 	.quad 0xcdefab
+0x400: abefcd0000000000     | 	.quad 0xcdefab
+0x408: abefcd0000000000     | 	.quad 0xcdefab
+0x410: abefcd0000000000     | 	.quad 0xcdefab
+0x418: abefcd0000000000     | 	.quad 0xcdefab
+0x420: abefcd0000000000     | 	.quad 0xcdefab
+0x428: abefcd0000000000     | 	.quad 0xcdefab
+0x430: abefcd0000000000     | 	.quad 0xcdefab
+0x438: abefcd0000000000     | 	.quad 0xcdefab
+0x440: abefcd0000000000     | 	.quad 0xcdefab
+0x448: abefcd0000000000     | 	.quad 0xcdefab
+0x450: abefcd0000000000     | 	.quad 0xcdefab
+0x458: abefcd0000000000     | 	.quad 0xcdefab
+0x460: abefcd0000000000     | 	.quad 0xcdefab
+0x468: abefcd0000000000     | 	.quad 0xcdefab
+0x470: abefcd0000000000     | 	.quad 0xcdefab
+0x478: abefcd0000000000     | 	.quad 0xcdefab
+0x480: abefcd0000000000     | 	.quad 0xcdefab
+0x488: abefcd0000000000     | 	.quad 0xcdefab
+0x490: abefcd0000000000     | 	.quad 0xcdefab
+0x498: abefcd0000000000     | 	.quad 0xcdefab
+0x4a0: abefcd0000000000     | 	.quad 0xcdefab
+0x4a8: abefcd0000000000     | 	.quad 0xcdefab
+0x4b0: abefcd0000000000     | 	.quad 0xcdefab
+0x4b8: abefcd0000000000     | 	.quad 0xcdefab
+0x4c0: abefcd0000000000     | 	.quad 0xcdefab
+0x4c8: abefcd0000000000     | 	.quad 0xcdefab
+0x4d0: abefcd0000000000     | 	.quad 0xcdefab
+0x4d8: abefcd0000000000     | 	.quad 0xcdefab
+0x4e0: abefcd0000000000     | 	.quad 0xcdefab
+0x4e8: abefcd0000000000     | 	.quad 0xcdefab
+0x4f0: abefcd0000000000     | 	.quad 0xcdefab
+0x4f8: abefcd0000000000     | 	.quad 0xcdefab
+0x500: abefcd0000000000     | 	.quad 0xcdefab
+0x508: abefcd0000000000     | 	.quad 0xcdefab
+0x510: abefcd0000000000     | 	.quad 0xcdefab
+0x518: abefcd0000000000     | 	.quad 0xcdefab
+0x520: abefcd0000000000     | 	.quad 0xcdefab
+0x528: abefcd0000000000     | 	.quad 0xcdefab
+0x530: abefcd0000000000     | 	.quad 0xcdefab
+0x538: abefcd0000000000     | 	.quad 0xcdefab
+0x540: abefcd0000000000     | 	.quad 0xcdefab
+0x548: abefcd0000000000     | 	.quad 0xcdefab
+0x550: abefcd0000000000     | 	.quad 0xcdefab
+0x558: abefcd0000000000     | 	.quad 0xcdefab
+0x560: abefcd0000000000     | 	.quad 0xcdefab
+0x568: abefcd0000000000     | 	.quad 0xcdefab
+0x570: abefcd0000000000     | 	.quad 0xcdefab
+0x578: abefcd0000000000     | 	.quad 0xcdefab
+0x580: abefcd0000000000     | 	.quad 0xcdefab
+0x588: abefcd0000000000     | 	.quad 0xcdefab
+0x590: abefcd0000000000     | 	.quad 0xcdefab
+0x598: abefcd0000000000     | 	.quad 0xcdefab
+0x5a0: abefcd0000000000     | 	.quad 0xcdefab
+0x5a8: abefcd0000000000     | 	.quad 0xcdefab
+0x5b0: abefcd0000000000     | 	.quad 0xcdefab
+0x5b8: abefcd0000000000     | 	.quad 0xcdefab
+0x5c0: abefcd0000000000     | 	.quad 0xcdefab
+0x5c8: abefcd0000000000     | 	.quad 0xcdefab
+0x5d0:                      | Postdest:
+0x5d0: bcfade0000000000     | 	.quad 0xdefabc
+                            | 
+0x5d8:                      | .align 8
+                            | # Run time stack
+0x5d8: 0000000000000000     | 	.quad 0
+0x5e0: 0000000000000000     | 	.quad 0
+0x5e8: 0000000000000000     | 	.quad 0
+0x5f0: 0000000000000000     | 	.quad 0
+0x5f8: 0000000000000000     | 	.quad 0
+0x600: 0000000000000000     | 	.quad 0
+0x608: 0000000000000000     | 	.quad 0
+0x610: 0000000000000000     | 	.quad 0
+0x618: 0000000000000000     | 	.quad 0
+0x620: 0000000000000000     | 	.quad 0
+0x628: 0000000000000000     | 	.quad 0
+0x630: 0000000000000000     | 	.quad 0
+0x638: 0000000000000000     | 	.quad 0
+0x640: 0000000000000000     | 	.quad 0
+0x648: 0000000000000000     | 	.quad 0
+0x650: 0000000000000000     | 	.quad 0
+                            | 
+0x658:                      | Stack:
