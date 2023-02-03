@@ -1697,5 +1697,5 @@ static char *find_list(size_t size) {
 
 -   https://github.com/mightydeveloper/Malloc-Lab/blob/master/mm.c
 -   [core dumped](https://blog.csdn.net/scjdas/article/details/128585787?spm=1001.2101.3001.6650.1&utm_medium=distribute.pc_relevant.none-task-blog-2%7Edefault%7EOPENSEARCH%7ERate-1-128585787-blog-108762118.pc_relevant_default&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2%7Edefault%7EOPENSEARCH%7ERate-1-128585787-blog-108762118.pc_relevant_default&utm_relevant_index=2)
--   https://blog.csdn.net/weixin_43362650/article/details/122521356。
+-   https://blog.csdn.net/weixin_43362650/article/details/122521356
 
