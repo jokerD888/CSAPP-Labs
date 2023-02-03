@@ -1693,5 +1693,5 @@ static char *find_list(size_t size) {
 
 本实验不愧是非常棘手的一个，耗费的时间也是最多，越到后面想要提升分数越困难。我认为主要的难点，在于大量的宏和非类型的指针操作，进而导致程序难以调试，而代码本身是比较容易理解。做完实验后，对动态内存分配器有了深入的理解，对其工作原理也算是了然于心， 对内存的分配心中也有了把控。内存管理和指针本就是`C/C++`的重要课题，经过此实验，对其理解无疑又上一层楼。
 
-参考文章：[core dumped](https://blog.csdn.net/scjdas/article/details/128585787?spm=1001.2101.3001.6650.1&utm_medium=distribute.pc_relevant.none-task-blog-2%7Edefault%7EOPENSEARCH%7ERate-1-128585787-blog-108762118.pc_relevant_default&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2%7Edefault%7EOPENSEARCH%7ERate-1-128585787-blog-108762118.pc_relevant_default&utm_relevant_index=2)，https://github.com/mightydeveloper/Malloc-Lab/blob/master/mm.c，[《深入理解计算机系统》实验七Molloc Lab](https://blog.csdn.net/weixin_43362650/article/details/122521356)。
+参考文章：[core dumped](https://blog.csdn.net/scjdas/article/details/128585787?spm=1001.2101.3001.6650.1&utm_medium=distribute.pc_relevant.none-task-blog-2%7Edefault%7EOPENSEARCH%7ERate-1-128585787-blog-108762118.pc_relevant_default&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2%7Edefault%7EOPENSEARCH%7ERate-1-128585787-blog-108762118.pc_relevant_default&utm_relevant_index=2)，https://github.com/mightydeveloper/Malloc-Lab/blob/master/mm.c，https://blog.csdn.net/weixin_43362650/article/details/122521356。
 
