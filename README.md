@@ -10,5 +10,5 @@
 -   [x] [Architecture Lab(Y86-64)](https://github.com/jokerD888/CSAPP-Labs/blob/main/archlab-handout/CSAPP%20Architecture%20Lab.md)
 -   [x] [Cache Lab](https://github.com/jokerD888/CSAPP-Labs/blob/main/cachelab-handout/CSAPP%20Cache%20Lab.md)
 -   [x] [Shell Lab](https://github.com/jokerD888/CSAPP-Labs/blob/main/shlab-handout/CSAPP%20Shell%20Lab.md)
--   [ ] Malloc Lab
+-   [x] [Malloc Lab](https://github.com/jokerD888/CSAPP-Labs/blob/main/malloclab/CSAPP%20Malloc%20Lab.md)
 -   [ ] Proxy Lab
